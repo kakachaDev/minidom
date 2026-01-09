@@ -31,7 +31,7 @@
   /* ==========================
      Telegram init
      ========================== */
-  if (!window.Telegram?.WebApp) {
+  if (window.Telegram?.WebApp.initData == "") {
     document.body.innerHTML = 'Open from Telegram';
     throw new Error('Not in Telegram');
   }
@@ -64,7 +64,7 @@
   /* ==========================
      WebSocket
      ========================== */
-  const socket = new WebSocket('wss://YOUR_BACKEND/ws');
+  const socket = new WebSocket('ws://188.233.238.241:3300/ws');
 
   socket.addEventListener('open', () => {
     socket.send(JSON.stringify({
