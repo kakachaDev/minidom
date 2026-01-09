@@ -1,2 +1,107 @@
-Ahahahahah
-Works? 
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mini Game</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #000;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<script type="module">
+  /* ==========================
+     Telegram init
+     ========================== */
+  if (!window.Telegram?.WebApp) {
+    document.body.innerHTML = 'Open from Telegram';
+    throw new Error('Not in Telegram');
+  }
+
+  const tg = window.Telegram.WebApp;
+  tg.ready();
+  tg.expand();
+
+  // отключаем свайпы вниз / закрытие
+  tg.enableClosingConfirmation();
+
+  /* ==========================
+     Canvas setup
+     ========================== */
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = innerWidth * dpr;
+    canvas.height = innerHeight * dpr;
+    canvas.style.width = innerWidth + 'px';
+    canvas.style.height = innerHeight + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ==========================
+     WebSocket
+     ========================== */
+  const socket = new WebSocket('wss://YOUR_BACKEND/ws');
+
+  socket.addEventListener('open', () => {
+    socket.send(JSON.stringify({
+      type: 'auth',
+      initData: tg.initData
+    }));
+  });
+
+  socket.addEventListener('message', e => {
+    const msg = JSON.parse(e.data);
+
+    if (msg.ok) {
+      console.log('Authorized');
+    }
+  });
+
+  /* ==========================
+     Game loop
+     ========================== */
+  let last = performance.now();
+
+  function loop(now) {
+    const dt = (now - last) / 1000;
+    last = now;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // debug
+    ctx.fillStyle = '#0f0';
+    ctx.font = '16px monospace';
+    ctx.fillText(`FPS: ${(1 / dt).toFixed(1)}`, 10, 20);
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
